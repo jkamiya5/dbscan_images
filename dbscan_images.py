@@ -1,4 +1,6 @@
+import itertools
 import multiprocessing
+import operator
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from logging import DEBUG, getLogger
@@ -68,10 +70,13 @@ class DbscanImages(object):
     train = np.array(vals)
     return train
 
+  def get_index(self, order, target):
+    for k, v in order.items():
+      if v == target:
+        return k
+
   def clustering(self, image_urls, min_samples=2, eps=0.4, pick_up_num=3):
-    # print("image_urls" + str(image_urls))
     train = self.get_train(image_urls)
-    # print("train" + str(train))
     if len(train) < min_samples:
       return None
     distances = self.calculate_distance(train)
@@ -80,9 +85,15 @@ class DbscanImages(object):
     cls = cluster.DBSCAN(metric='precomputed', min_samples=min_samples, eps=eps)
     y = cls.fit_predict(distances)
     val = pd.Series(y).value_counts()
-    top = [x for x in list(val.index) if x != -1][:pick_up_num]
-    order = {key: i for i, key in enumerate(top)}
-    d = dict([(x1, x2) for (x1, x2) in enumerate(y.tolist()) if x2 in top])
-    result = [(x2, image_urls[x1]) for (x1, x2) in sorted(d.items(), key=lambda x: order[x[1]])]
-    print("result" + str(result))
-    return result
+    target_clusters_index = [x for x in list(val.index) if x != -1][:pick_up_num]
+    order = {key: i for i, key in enumerate(target_clusters_index)}
+    picked_up = dict([(index, val) for (index, val) in enumerate(y.tolist()) if val in target_clusters_index])
+    picked_up_ = [
+        (self.get_index(order, x2), image_urls[x1])
+        for (x1, x2) in sorted(picked_up.items(), key=lambda x: order[x[1]])
+    ]
+    ret = []
+    for key, subiter in itertools.groupby(picked_up_, operator.itemgetter(0)):
+      vals = [item[1] for item in subiter]
+      ret.append({"row_id": int(key), "sumples_num": len(vals), "vals": vals})
+    return ret
