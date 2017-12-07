@@ -70,11 +70,6 @@ class DbscanImages(object):
     train = np.array(vals)
     return train
 
-  def get_index(self, order, target):
-    for k, v in order.items():
-      if v == target:
-        return k
-
   def clustering(self, image_urls, min_samples=2, eps=0.4, pick_up_num=3):
     train = self.get_train(image_urls)
     if len(train) < min_samples:
@@ -89,7 +84,7 @@ class DbscanImages(object):
     order = {key: i for i, key in enumerate(target_clusters_index)}
     picked_up = dict([(index, val) for (index, val) in enumerate(y.tolist()) if val in target_clusters_index])
     picked_up_ = [
-        (self.get_index(order, x2), image_urls[x1])
+        (order[x2], image_urls[x1])
         for (x1, x2) in sorted(picked_up.items(), key=lambda x: order[x[1]])
     ]
     ret = []
