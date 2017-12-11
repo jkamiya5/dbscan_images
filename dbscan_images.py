@@ -58,9 +58,11 @@ class DbscanImages(object):
         ret = img.make_blob()
         ret = np.asarray(bytearray(ret), dtype="uint8")
         ret = cv2.imdecode(ret, cv2.IMREAD_GRAYSCALE)
+        if ret.sum() == 0:
+          return None
     except Exception as e:
       logger.debug(e)
-      # print(e)
+
     return ret
 
   def get_train(self, image_urls, image_size=240):
@@ -83,10 +85,7 @@ class DbscanImages(object):
     target_clusters_index = [x for x in list(val.index) if x != -1][:pick_up_num]
     order = {key: i for i, key in enumerate(target_clusters_index)}
     picked_up = dict([(index, val) for (index, val) in enumerate(y.tolist()) if val in target_clusters_index])
-    picked_up_ = [
-        (order[x2], image_urls[x1])
-        for (x1, x2) in sorted(picked_up.items(), key=lambda x: order[x[1]])
-    ]
+    picked_up_ = [(order[x2], image_urls[x1]) for (x1, x2) in sorted(picked_up.items(), key=lambda x: order[x[1]])]
     ret = []
     for key, subiter in itertools.groupby(picked_up_, operator.itemgetter(0)):
       vals = [item[1] for item in subiter]
