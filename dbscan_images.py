@@ -32,8 +32,8 @@ class DbscanImages(object):
 
   def compare(self, args):
     img, img2 = args
-    img = (img - img.mean()) / img.std()
-    img2 = (img2 - img2.mean()) / img2.std()
+    img = ((img - img.mean()) / img.std()) if img.std() != 0 else 1
+    img2 = ((img2 - img2.mean()) / img2.std()) if img2.std() != 0 else 1
     return np.mean(np.abs(img - img2))
 
   def calculate_distance(self, train):
@@ -46,7 +46,6 @@ class DbscanImages(object):
     return distances
 
   def url_to_trim_image(self, url, size, f=1000):
-    # print("url:" + str(url))
     ret = None
     try:
       request = urllib.request.Request(url)
@@ -58,8 +57,6 @@ class DbscanImages(object):
         ret = img.make_blob()
         ret = np.asarray(bytearray(ret), dtype="uint8")
         ret = cv2.imdecode(ret, cv2.IMREAD_GRAYSCALE)
-        if ret.sum() == 0:
-          return None
     except Exception as e:
       logger.debug(e)
 
@@ -74,6 +71,7 @@ class DbscanImages(object):
 
   def clustering(self, image_urls, min_samples=2, eps=0.4, pick_up_num=3):
     train = self.get_train(image_urls)
+    print(train)
     if len(train) < min_samples:
       return None
     distances = self.calculate_distance(train)
