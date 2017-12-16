@@ -1,6 +1,7 @@
 import itertools
 import multiprocessing
 import operator
+import urllib
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from logging import DEBUG, getLogger
@@ -10,9 +11,11 @@ import pandas as pd
 from sklearn import cluster
 
 import cv2
+import holoviews as hv
 from wand.display import display
 from wand.image import Image
 
+hv.extension('bokeh')
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
 logger.propagate = False
@@ -44,6 +47,28 @@ class DbscanImages(object):
       dists = pool.map(self.compare, all_imgs)
       distances[i, :] = dists
     return distances
+
+  def url_to_image(self, url):
+    ret = None
+    try:
+      request = urllib.request.Request(url)
+      resp = urllib.request.urlopen(request)
+      ret = np.asarray(bytearray(resp.read()), dtype="uint8")
+      ret = cv2.imdecode(ret, cv2.IMREAD_COLOR)
+    except Exception as e:
+      logger.debug(e)
+    return ret
+
+  def show_images(self, image_urls, col_num=4):
+    images = []
+    for url in image_urls:
+      img = url_to_image(url)
+      if img is None:
+        continue
+      img_ = hv.Image(img)
+      images.append(img_)
+      obj = hv.Layout(images).cols(col_num).display('all')
+    return obj
 
   def url_to_trim_image(self, url, size, f=1000):
     ret = None
