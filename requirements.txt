@@ -2,3 +2,5 @@ sklearn
 scipy
 wand
 opencv-python
+holoviews
+bokeh

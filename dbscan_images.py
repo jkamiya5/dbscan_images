@@ -62,7 +62,7 @@ class DbscanImages(object):
   def show_images(self, image_urls, col_num=4):
     images = []
     for url in image_urls:
-      img = url_to_image(url)
+      img = self.url_to_image(url)
       if img is None:
         continue
       img_ = hv.Image(img)
