@@ -59,13 +59,13 @@ class DbscanImages(object):
       logger.debug(e)
     return ret
 
-  def show_images(self, image_urls, col_num=4):
+  def show_images(self, image_urls, labels=None, col_num=4):
     images = []
-    for url in image_urls:
+    for index, url in enumerate(image_urls):
       img = self.url_to_image(url)
       if img is None:
         continue
-      img_ = hv.Image(img)
+      img_ = hv.Image(img, label=labels[index]) if labels is not None else hv.Image(img)
       images.append(img_)
     obj = hv.Layout(images).cols(col_num).display('all')
     return obj
