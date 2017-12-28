@@ -67,7 +67,7 @@ class DbscanImages(object):
         continue
       img_ = hv.Image(img)
       images.append(img_)
-      obj = hv.Layout(images).cols(col_num).display('all')
+    obj = hv.Layout(images).cols(col_num).display('all')
     return obj
 
   def url_to_trim_image(self, url, size, f=1000):
